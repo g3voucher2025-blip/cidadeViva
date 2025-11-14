@@ -209,6 +209,78 @@ function showWarning(message, title = null) {
   showNotification(message, "warning", title);
 }
 
+// Função de confirmação customizada (substitui confirm/alert)
+function showConfirm(message, title = "Confirmar", onConfirm, onCancel = null) {
+  const container = document.getElementById("notifications-container");
+  if (!container) {
+    // Fallback para confirm nativo se container não existir
+    if (confirm(message)) {
+      onConfirm();
+    } else if (onCancel) {
+      onCancel();
+    }
+    return;
+  }
+
+  // Criar overlay de confirmação
+  const overlay = document.createElement("div");
+  overlay.className = "confirm-overlay";
+  overlay.innerHTML = `
+    <div class="confirm-modal">
+      <div class="confirm-header">
+        <h3>${title}</h3>
+        <button class="confirm-close" onclick="this.closest('.confirm-overlay').remove()">×</button>
+      </div>
+      <div class="confirm-body">
+        <p>${message}</p>
+      </div>
+      <div class="confirm-actions">
+        <button class="btn btn-secondary confirm-cancel">Cancelar</button>
+        <button class="btn btn-primary confirm-ok">Confirmar</button>
+      </div>
+    </div>
+  `;
+
+  container.appendChild(overlay);
+
+  // Event listeners
+  const cancelBtn = overlay.querySelector(".confirm-cancel");
+  const okBtn = overlay.querySelector(".confirm-ok");
+  const closeBtn = overlay.querySelector(".confirm-close");
+
+  const close = () => {
+    overlay.classList.add("fade-out");
+    setTimeout(() => {
+      if (overlay.parentElement) {
+        overlay.remove();
+      }
+    }, 300);
+  };
+
+  cancelBtn.onclick = () => {
+    close();
+    if (onCancel) onCancel();
+  };
+
+  okBtn.onclick = () => {
+    close();
+    onConfirm();
+  };
+
+  closeBtn.onclick = () => {
+    close();
+    if (onCancel) onCancel();
+  };
+
+  // Fechar ao clicar no overlay
+  overlay.onclick = (e) => {
+    if (e.target === overlay) {
+      close();
+      if (onCancel) onCancel();
+    }
+  };
+}
+
 // Inicialização
 document.addEventListener("DOMContentLoaded", function () {
   initLogin();
@@ -1177,6 +1249,7 @@ function createEventPopup(event) {
   const avgRating = getAverageRating("evento", event.id);
   const ratingStars = "⭐".repeat(Math.round(avgRating));
   const eventDate = new Date(event.date + "T" + event.time);
+  const isFinalized = event.status === "finalizado";
 
   // Obter array de imagens (suporta formato antigo e novo)
   const images =
@@ -1189,9 +1262,20 @@ function createEventPopup(event) {
   const carouselId = `carousel-event-${event.id}`;
   const imageHtml = createImageCarousel(images, event.name, carouselId);
 
+  // Verificar se pode editar/excluir (admin e empresa podem gerenciar seus próprios eventos)
+  const canManage =
+    currentUser &&
+    (currentUser.role === "admin" ||
+      (currentUser.role === "empresa" &&
+        event.createdBy === currentUser.email));
+
   return `
         <div class="popup-content">
-            <h3>🎉 ${event.name}</h3>
+            <h3>🎉 ${event.name}${
+    isFinalized
+      ? ' <span style="font-size: 0.7em; color: #7f8c8d;">(Finalizado)</span>'
+      : ""
+  }</h3>
             ${imageHtml}
             <p><strong>Data:</strong> ${eventDate.toLocaleDateString(
               "pt-BR"
@@ -1216,6 +1300,29 @@ function createEventPopup(event) {
                 ? `<div class="popup-actions">
                     <button class="popup-btn popup-btn-review" onclick="showLoginForm()">
                         Faça login para avaliar
+                    </button>
+                </div>`
+                : ""
+            }
+            ${
+              canManage
+                ? `<div class="popup-actions" style="margin-top: 10px; border-top: 1px solid #e0e0e0; padding-top: 10px;">
+                    <button class="popup-btn popup-btn-edit" onclick="editEvent('${
+                      event.id
+                    }')" title="Editar Evento">
+                        ✏️ Editar
+                    </button>
+                    ${
+                      !isFinalized
+                        ? `<button class="popup-btn popup-btn-finish" onclick="finalizeEvent('${event.id}')" title="Finalizar Evento">
+                            ✓ Finalizar
+                        </button>`
+                        : ""
+                    }
+                    <button class="popup-btn popup-btn-delete" onclick="deleteEvent('${
+                      event.id
+                    }')" title="Excluir Evento" style="background: #e74c3c;">
+                        🗑️ Excluir
                     </button>
                 </div>`
                 : ""
@@ -1491,6 +1598,10 @@ function initForms() {
             points[index] = { ...points[index], ...point, id: pointId };
           }
 
+          // Atualizar mapa e lista imediatamente após atualização
+          updateMapMarkers();
+          updateItemsList();
+
           submitBtn.textContent = "Atualizado!";
           setTimeout(() => {
             submitBtn.disabled = false;
@@ -1512,14 +1623,15 @@ function initForms() {
           // Adicionar ao array local
           points.push(point);
 
+          // Atualizar mapa e lista imediatamente após criação
+          updateMapMarkers();
+          updateItemsList();
+
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
           closeModal("point-modal");
           showSuccess("Ponto turístico cadastrado com sucesso!", "Cadastro");
         }
-
-        updateMapMarkers();
-        updateItemsList();
 
         // Limpar formulário e preview
         document.getElementById("point-form").reset();
@@ -1624,6 +1736,10 @@ function initForms() {
             events[index] = { ...events[index], ...event, id: eventId };
           }
 
+          // Atualizar mapa e lista imediatamente após atualização
+          updateMapMarkers();
+          updateItemsList();
+
           submitBtn.textContent = "Atualizado!";
           setTimeout(() => {
             submitBtn.disabled = false;
@@ -1642,14 +1758,15 @@ function initForms() {
           // Adicionar ao array local
           events.push(event);
 
+          // Atualizar mapa e lista imediatamente após criação
+          updateMapMarkers();
+          updateItemsList();
+
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
           closeModal("event-modal");
           showSuccess("Evento cadastrado com sucesso!", "Cadastro");
         }
-
-        updateMapMarkers();
-        updateItemsList();
 
         // Limpar formulário e preview
         document.getElementById("event-form").reset();
@@ -1770,6 +1887,7 @@ function initForms() {
             .doc(establishmentId)
             .update(establishment);
 
+          // Atualizar no array local
           const index = establishments.findIndex(
             (e) => e.id === establishmentId
           );
@@ -1780,6 +1898,10 @@ function initForms() {
               id: establishmentId,
             };
           }
+
+          // Atualizar mapa e lista imediatamente após atualização
+          updateMapMarkers();
+          updateItemsList();
 
           submitBtn.textContent = "Atualizado!";
           setTimeout(() => {
@@ -1815,14 +1937,15 @@ function initForms() {
           establishment.id = docRef.id;
           establishments.push(establishment);
 
+          // Atualizar mapa e lista imediatamente após criação
+          updateMapMarkers();
+          updateItemsList();
+
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
           closeModal("establishment-modal");
           showSuccess("Estabelecimento cadastrado com sucesso!", "Cadastro");
         }
-
-        updateMapMarkers();
-        updateItemsList();
 
         // Limpar formulário
         document.getElementById("establishment-form").reset();
@@ -2834,6 +2957,11 @@ function updateItemsList() {
                         <span style="color: #7f8c8d; font-size: 0.85em; font-style: italic;">Evento Finalizado</span>
                     `
                     }
+                    <button class="btn-delete" onclick="event.stopPropagation(); deleteEvent('${
+                      event.id
+                    }')" title="Excluir Evento">
+                        🗑️ Excluir
+                    </button>
                 </div>
             `
                 : ""
@@ -3156,10 +3284,6 @@ function removeExistingImage(type, index) {
 
 // Excluir ponto turístico
 async function deletePoint(pointId) {
-  if (!confirm("Tem certeza que deseja excluir este ponto turístico?")) {
-    return;
-  }
-
   if (currentUser.role !== "admin") {
     showWarning(
       "Apenas administradores podem excluir pontos turísticos",
@@ -3168,51 +3292,49 @@ async function deletePoint(pointId) {
     return;
   }
 
-  try {
-    // Remover avaliações relacionadas primeiro
-    const reviewRefs = await db
-      .collection("reviews")
-      .where("itemType", "==", "ponto")
-      .where("itemId", "==", pointId)
-      .get();
+  showConfirm(
+    "Tem certeza que deseja excluir este ponto turístico? Esta ação não pode ser desfeita.",
+    "Excluir Ponto Turístico",
+    async () => {
+      try {
+        // Remover avaliações relacionadas primeiro
+        const reviewRefs = await db
+          .collection("reviews")
+          .where("itemType", "==", "ponto")
+          .where("itemId", "==", pointId)
+          .get();
 
-    const batch = db.batch();
-    reviewRefs.docs.forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-    await batch.commit();
+        const batch = db.batch();
+        reviewRefs.docs.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
 
-    // Deletar o ponto
-    await db.collection("points").doc(pointId).delete();
+        // Deletar o ponto
+        await db.collection("points").doc(pointId).delete();
 
-    // Remover do array local imediatamente
-    points = points.filter((p) => p.id !== pointId);
-    reviews = reviews.filter(
-      (r) => !(r.itemType === "ponto" && r.itemId === pointId)
-    );
+        // Remover do array local imediatamente
+        points = points.filter((p) => p.id !== pointId);
+        reviews = reviews.filter(
+          (r) => !(r.itemType === "ponto" && r.itemId === pointId)
+        );
 
-    // Atualizar mapa e lista imediatamente
-    updateMapMarkers();
-    updateItemsList();
+        // Atualizar mapa e lista imediatamente
+        updateMapMarkers();
+        updateItemsList();
 
-    // O listener em tempo real também vai atualizar, mas já atualizamos manualmente
-    showSuccess("Ponto turístico excluído com sucesso!", "Exclusão");
-  } catch (error) {
-    console.error("Erro ao excluir ponto:", error);
-    showError("Erro ao excluir ponto turístico: " + error.message, "Erro");
-  }
+        // O listener em tempo real também vai atualizar, mas já atualizamos manualmente
+        showSuccess("Ponto turístico excluído com sucesso!", "Exclusão");
+      } catch (error) {
+        console.error("Erro ao excluir ponto:", error);
+        showError("Erro ao excluir ponto turístico: " + error.message, "Erro");
+      }
+    }
+  );
 }
 
 // Finalizar evento (ao invés de excluir)
 async function finalizeEvent(eventId) {
-  if (
-    !confirm(
-      "Tem certeza que deseja finalizar este evento? O evento será marcado como finalizado e não aparecerá mais no mapa, mas permanecerá no histórico."
-    )
-  ) {
-    return;
-  }
-
   const event = events.find((e) => e.id === eventId);
   if (!event) {
     showError("Evento não encontrado", "Erro");
@@ -3220,8 +3342,10 @@ async function finalizeEvent(eventId) {
   }
 
   const canFinalize =
-    currentUser.role === "admin" ||
-    (currentUser.role === "empresa" && event.createdBy === currentUser.email);
+    currentUser &&
+    (currentUser.role === "admin" ||
+      (currentUser.role === "empresa" &&
+        event.createdBy === currentUser.email));
   if (!canFinalize) {
     showWarning(
       "Você não tem permissão para finalizar este evento",
@@ -3230,32 +3354,99 @@ async function finalizeEvent(eventId) {
     return;
   }
 
-  try {
-    // Atualizar evento no Firestore
-    await db.collection("events").doc(eventId).update({
-      status: "finalizado",
-      finalizedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      finalizedBy: currentUser.email,
-    });
+  showConfirm(
+    "Tem certeza que deseja finalizar este evento? O evento será marcado como finalizado e não aparecerá mais no mapa, mas permanecerá no histórico.",
+    "Finalizar Evento",
+    async () => {
+      try {
+        // Atualizar evento no Firestore
+        await db.collection("events").doc(eventId).update({
+          status: "finalizado",
+          finalizedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          finalizedBy: currentUser.email,
+        });
 
-    // Atualizar no array local
-    const eventIndex = events.findIndex((e) => e.id === eventId);
-    if (eventIndex !== -1) {
-      events[eventIndex].status = "finalizado";
-      events[eventIndex].finalizedAt = new Date();
-      events[eventIndex].finalizedBy = currentUser.email;
+        // Atualizar no array local
+        const eventIndex = events.findIndex((e) => e.id === eventId);
+        if (eventIndex !== -1) {
+          events[eventIndex].status = "finalizado";
+          events[eventIndex].finalizedAt = new Date();
+          events[eventIndex].finalizedBy = currentUser.email;
+        }
+
+        updateMapMarkers();
+        updateItemsList();
+        showSuccess(
+          "Evento finalizado com sucesso! Ele permanecerá no histórico.",
+          "Evento Finalizado"
+        );
+      } catch (error) {
+        console.error("Erro ao finalizar evento:", error);
+        showError("Erro ao finalizar evento: " + error.message, "Erro");
+      }
     }
+  );
+}
 
-    updateMapMarkers();
-    updateItemsList();
-    showSuccess(
-      "Evento finalizado com sucesso! Ele permanecerá no histórico.",
-      "Evento Finalizado"
-    );
-  } catch (error) {
-    console.error("Erro ao finalizar evento:", error);
-    showError("Erro ao finalizar evento: " + error.message, "Erro");
+// Excluir evento permanentemente
+async function deleteEvent(eventId) {
+  const event = events.find((e) => e.id === eventId);
+  if (!event) {
+    showError("Evento não encontrado", "Erro");
+    return;
   }
+
+  const canDelete =
+    currentUser &&
+    (currentUser.role === "admin" ||
+      (currentUser.role === "empresa" &&
+        event.createdBy === currentUser.email));
+  if (!canDelete) {
+    showWarning(
+      "Você não tem permissão para excluir este evento",
+      "Permissão Negada"
+    );
+    return;
+  }
+
+  showConfirm(
+    "Tem certeza que deseja excluir este evento permanentemente? Esta ação não pode ser desfeita.",
+    "Excluir Evento",
+    async () => {
+      try {
+        // Excluir do Firestore
+        await db.collection("events").doc(eventId).delete();
+
+        // Remover do array local
+        const eventIndex = events.findIndex((e) => e.id === eventId);
+        if (eventIndex !== -1) {
+          events.splice(eventIndex, 1);
+        }
+
+        // Remover avaliações relacionadas (opcional)
+        const relatedReviews = reviews.filter(
+          (r) => r.itemType === "evento" && r.itemId === eventId
+        );
+        for (const review of relatedReviews) {
+          try {
+            await db.collection("reviews").doc(review.id).delete();
+          } catch (error) {
+            console.warn("Erro ao excluir avaliação:", error);
+          }
+        }
+        reviews = reviews.filter(
+          (r) => !(r.itemType === "evento" && r.itemId === eventId)
+        );
+
+        updateMapMarkers();
+        updateItemsList();
+        showSuccess("Evento excluído com sucesso!", "Exclusão");
+      } catch (error) {
+        console.error("Erro ao excluir evento:", error);
+        showError("Erro ao excluir evento: " + error.message, "Erro");
+      }
+    }
+  );
 }
 
 // Editar estabelecimento
@@ -3341,10 +3532,6 @@ async function editEstablishment(establishmentId) {
 
 // Excluir estabelecimento
 async function deleteEstablishment(establishmentId) {
-  if (!confirm("Tem certeza que deseja excluir este estabelecimento?")) {
-    return;
-  }
-
   const establishment = establishments.find((e) => e.id === establishmentId);
   if (!establishment) {
     showError("Estabelecimento não encontrado", "Erro");
@@ -3352,9 +3539,10 @@ async function deleteEstablishment(establishmentId) {
   }
 
   const canDelete =
-    currentUser.role === "admin" ||
-    (currentUser.role === "empresa" &&
-      establishment.createdBy === currentUser.email);
+    currentUser &&
+    (currentUser.role === "admin" ||
+      (currentUser.role === "empresa" &&
+        establishment.createdBy === currentUser.email));
   if (!canDelete) {
     showWarning(
       "Você não tem permissão para excluir este estabelecimento",
@@ -3363,35 +3551,42 @@ async function deleteEstablishment(establishmentId) {
     return;
   }
 
-  try {
-    await db.collection("establishments").doc(establishmentId).delete();
+  showConfirm(
+    "Tem certeza que deseja excluir este estabelecimento permanentemente? Esta ação não pode ser desfeita.",
+    "Excluir Estabelecimento",
+    async () => {
+      try {
+        await db.collection("establishments").doc(establishmentId).delete();
 
-    // Remover do array local
-    establishments = establishments.filter((e) => e.id !== establishmentId);
+        // Remover do array local
+        establishments = establishments.filter((e) => e.id !== establishmentId);
 
-    // Remover avaliações relacionadas
-    reviews = reviews.filter(
-      (r) => !(r.itemType === "estabelecimento" && r.itemId === establishmentId)
-    );
-    const reviewRefs = await db
-      .collection("reviews")
-      .where("itemType", "==", "estabelecimento")
-      .where("itemId", "==", establishmentId)
-      .get();
+        // Remover avaliações relacionadas
+        reviews = reviews.filter(
+          (r) =>
+            !(r.itemType === "estabelecimento" && r.itemId === establishmentId)
+        );
+        const reviewRefs = await db
+          .collection("reviews")
+          .where("itemType", "==", "estabelecimento")
+          .where("itemId", "==", establishmentId)
+          .get();
 
-    const batch = db.batch();
-    reviewRefs.docs.forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-    await batch.commit();
+        const batch = db.batch();
+        reviewRefs.docs.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
 
-    updateMapMarkers();
-    updateItemsList();
-    showSuccess("Estabelecimento excluído com sucesso!", "Exclusão");
-  } catch (error) {
-    console.error("Erro ao excluir estabelecimento:", error);
-    showError("Erro ao excluir estabelecimento: " + error.message, "Erro");
-  }
+        updateMapMarkers();
+        updateItemsList();
+        showSuccess("Estabelecimento excluído com sucesso!", "Exclusão");
+      } catch (error) {
+        console.error("Erro ao excluir estabelecimento:", error);
+        showError("Erro ao excluir estabelecimento: " + error.message, "Erro");
+      }
+    }
+  );
 }
 
 // ========== MENSAGEM DE BOAS-VINDAS ==========
@@ -3909,56 +4104,5 @@ function checkSidebarToggle() {
       sidebar.style.position = "relative";
       sidebar.classList.remove("active");
     }
-  }
-}
-
-// ========== POPULAR BANCO DE DADOS ==========
-async function loadAndRunPopulateScript() {
-  if (!currentUser || currentUser.role !== "admin") {
-    showError(
-      "Apenas administradores podem executar esta função.",
-      "Permissão Negada"
-    );
-    return;
-  }
-
-  const confirm = window.confirm(
-    "⚠️ ATENÇÃO: Este script irá popular o banco de dados com dados fictícios.\n\n" +
-      "Isso inclui:\n" +
-      "- Criar usuários (empresas e turistas)\n" +
-      "- Adicionar pontos turísticos\n" +
-      "- Adicionar estabelecimentos comerciais\n" +
-      "- Criar eventos fictícios\n" +
-      "- Adicionar avaliações fictícias\n\n" +
-      "Deseja continuar?"
-  );
-
-  if (!confirm) return;
-
-  try {
-    // Carregar o script
-    const script = document.createElement("script");
-    script.src = "populate-database.js";
-    script.onload = async () => {
-      if (typeof populateDatabase === "function") {
-        showInfo(
-          "Script carregado. Iniciando população do banco...",
-          "Carregando"
-        );
-        await populateDatabase();
-      } else {
-        showError("Função populateDatabase não encontrada no script.", "Erro");
-      }
-    };
-    script.onerror = () => {
-      showError(
-        "Erro ao carregar o script. Verifique se o arquivo populate-database.js existe.",
-        "Erro"
-      );
-    };
-    document.head.appendChild(script);
-  } catch (error) {
-    console.error("Erro ao carregar script:", error);
-    showError("Erro ao carregar script: " + error.message, "Erro");
   }
 }

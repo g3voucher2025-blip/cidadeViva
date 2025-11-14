@@ -1636,6 +1636,127 @@ h6 {
   animation: slideOutRight 0.3s ease-out forwards;
 }
 
+/* ========== MODAL DE CONFIRMAÇÃO ========== */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.confirm-overlay.fade-out {
+  animation: fadeOut 0.3s ease-out forwards;
+}
+
+.confirm-modal {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideDown 0.3s ease-out;
+}
+
+.confirm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--light-gray);
+  background: linear-gradient(135deg, var(--primary-green), var(--primary-blue));
+  color: var(--white);
+}
+
+.confirm-header h3 {
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: 600;
+}
+
+.confirm-close {
+  background: none;
+  border: none;
+  color: var(--white);
+  font-size: 28px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: var(--transition);
+  padding: 0;
+  line-height: 1;
+}
+
+.confirm-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
+}
+
+.confirm-body {
+  padding: 24px;
+  color: var(--dark-gray);
+  line-height: 1.6;
+}
+
+.confirm-body p {
+  margin: 0;
+  font-size: 1em;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--light-gray);
+  justify-content: flex-end;
+}
+
+.confirm-actions .btn {
+  min-width: 120px;
+  padding: 10px 20px;
+}
+
+.confirm-actions .confirm-cancel {
+  background: var(--light-gray);
+  color: var(--dark-gray);
+}
+
+.confirm-actions .confirm-cancel:hover {
+  background: #d5dbdb;
+}
+
+.confirm-actions .confirm-ok {
+  background: var(--primary-green);
+  color: var(--white);
+}
+
+.confirm-actions .confirm-ok:hover {
+  background: var(--success);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 /* ========== LIGHTBOX DE IMAGENS ========== */
 #image-lightbox {
   background-color: rgba(44, 62, 80, 0.95);
