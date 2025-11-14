@@ -151,6 +151,24 @@ function showNotification(message, type = "info", title = null) {
   const container = document.getElementById("notifications-container");
   if (!container) return;
 
+  // Verificar se já existe uma notificação idêntica para evitar duplicatas
+  const existingNotifications = container.querySelectorAll(".notification");
+  for (let existing of existingNotifications) {
+    const existingMessage = existing
+      .querySelector(".notification-message")
+      ?.textContent?.trim();
+    const existingTitle = existing
+      .querySelector(".notification-title")
+      ?.textContent?.trim();
+    const messageMatch = existingMessage === message.trim();
+    const titleMatch = title ? existingTitle === title : !existingTitle;
+
+    if (messageMatch && titleMatch) {
+      // Já existe uma notificação idêntica, não criar duplicata
+      return;
+    }
+  }
+
   const notification = document.createElement("div");
   notification.className = `notification ${type}`;
 
@@ -479,6 +497,18 @@ function showLoginForm() {
   }
 }
 
+// Fechar tela de login e continuar como visitante
+function closeLoginForm() {
+  document.getElementById("login-container").style.display = "none";
+  document.getElementById("register-container").style.display = "none";
+  // Se o app ainda não estiver visível, mostrar como visitante
+  if (document.getElementById("app-container").style.display !== "flex") {
+    showAppAsVisitor();
+  } else {
+    document.getElementById("app-container").style.display = "flex";
+  }
+}
+
 // Inicializar formulário de cadastro
 function initRegister() {
   const registerForm = document.getElementById("register-form");
@@ -626,11 +656,24 @@ function showApp() {
 
   // Se for turista, mostrar boas-vindas
   if (currentUser && currentUser.role === "turista") {
-    setTimeout(() => {
+    // Cancelar timeouts anteriores se existirem
+    if (welcomeTimeoutId) {
+      clearTimeout(welcomeTimeoutId);
+      welcomeTimeoutId = null;
+    }
+    if (surveyTimeoutId) {
+      clearTimeout(surveyTimeoutId);
+      surveyTimeoutId = null;
+    }
+
+    welcomeTimeoutId = setTimeout(() => {
       showWelcomeModal();
+      welcomeTimeoutId = null;
     }, 500);
-    setTimeout(() => {
+
+    surveyTimeoutId = setTimeout(() => {
       showSurveyModal();
+      surveyTimeoutId = null;
     }, 5000);
   }
 }
@@ -658,14 +701,26 @@ function showAppAsVisitor() {
   // Carregar dados (forçar refresh do servidor para evitar cache)
   loadData(true);
 
+  // Cancelar timeouts anteriores se existirem
+  if (welcomeTimeoutId) {
+    clearTimeout(welcomeTimeoutId);
+    welcomeTimeoutId = null;
+  }
+  if (surveyTimeoutId) {
+    clearTimeout(surveyTimeoutId);
+    surveyTimeoutId = null;
+  }
+
   // Mostrar mensagem de boas-vindas
-  setTimeout(() => {
+  welcomeTimeoutId = setTimeout(() => {
     showWelcomeModal();
+    welcomeTimeoutId = null;
   }, 500);
 
   // Mostrar popup de pesquisa após um delay maior
-  setTimeout(() => {
+  surveyTimeoutId = setTimeout(() => {
     showSurveyModal();
+    surveyTimeoutId = null;
   }, 5000);
 }
 
@@ -1188,7 +1243,7 @@ function createEstablishmentPopup(establishment) {
                 🏢 ${establishment.name}
                 ${
                   isVerified
-                    ? '<span class="verified-badge" title="Verificado pelo Cadastur">✓ Verificado</span>'
+                    ? '<span class="verified-badge" title="Verificado pelo Cadastur">Verificado</span>'
                     : ""
                 }
             </h3>
@@ -1558,7 +1613,12 @@ function initForms() {
         const lat = parseFloat(document.getElementById("point-lat").value);
         const lng = parseFloat(document.getElementById("point-lng").value);
 
-        if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+        if (
+          isNaN(lat) ||
+          isNaN(lng) ||
+          document.getElementById("point-lat").value.trim() === "" ||
+          document.getElementById("point-lng").value.trim() === ""
+        ) {
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
           showWarning(
@@ -1695,7 +1755,12 @@ function initForms() {
         const lat = parseFloat(document.getElementById("event-lat").value);
         const lng = parseFloat(document.getElementById("event-lng").value);
 
-        if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+        if (
+          isNaN(lat) ||
+          isNaN(lng) ||
+          document.getElementById("event-lat").value.trim() === "" ||
+          document.getElementById("event-lng").value.trim() === ""
+        ) {
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
           showWarning(
@@ -1832,7 +1897,12 @@ function initForms() {
           document.getElementById("establishment-lng").value
         );
 
-        if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+        if (
+          isNaN(lat) ||
+          isNaN(lng) ||
+          document.getElementById("establishment-lat").value.trim() === "" ||
+          document.getElementById("establishment-lng").value.trim() === ""
+        ) {
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
           showWarning(
@@ -2650,17 +2720,35 @@ function setupRealtimeListeners() {
     }
   );
 
-  // Listener para avaliações - não precisa atualizar o mapa, só a lista
+  // Listener para avaliações - atualizar popups do mapa e lista em tempo real
   reviewsListener = db.collection("reviews").onSnapshot(
     (snapshot) => {
+      const docChanges = snapshot.docChanges();
+      // Ignorar a primeira carga (quando não há mudanças reais)
+      const isInitialLoad =
+        docChanges.length === 0 ||
+        (docChanges.length === snapshot.docs.length && !wasSetup);
+
       reviews = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+
       // Limpar cache de ratings quando reviews mudarem
       clearRatingsCache();
-      // Apenas atualizar a lista, não o mapa (avaliações não mudam posição)
-      updateItemsList();
+
+      // Só atualizar se não for a carga inicial ou se houver mudanças reais
+      if (!isInitialLoad) {
+        // Atualizar popups abertos no mapa se houver mudanças
+        if (map) {
+          updateOpenPopups();
+          // Atualizar todos os popups (mesmo fechados) para que quando abrirem tenham dados atualizados
+          updateMapPopups();
+        }
+
+        // Atualizar a lista de itens
+        updateItemsList();
+      }
     },
     (error) => {
       console.error("Erro no listener de avaliações:", error);
@@ -2780,6 +2868,161 @@ function getAverageRating(itemType, itemId) {
 // Limpar cache quando reviews mudarem
 function clearRatingsCache() {
   ratingsCache.clear();
+}
+
+// Atualizar popups abertos no mapa quando avaliações mudarem
+function updateOpenPopups() {
+  if (!map) return;
+
+  // Iterar sobre todos os marcadores
+  markers.forEach((marker) => {
+    // Verificar se o popup está aberto
+    // No Leaflet, verificamos se o popup está visível no mapa
+    const popup = marker.getPopup();
+    if (popup) {
+      // Verificar se o popup está aberto verificando se está no DOM
+      const popupElement = popup.getElement();
+      const isOpen = popupElement && popupElement.parentElement;
+
+      if (isOpen) {
+        const latlng = marker.getLatLng();
+
+        // Encontrar o item correspondente ao marcador
+        let item = null;
+        let itemType = null;
+
+        // Verificar pontos turísticos
+        const point = points.find(
+          (p) =>
+            p.lat &&
+            p.lng &&
+            Math.abs(p.lat - latlng.lat) < 0.0001 &&
+            Math.abs(p.lng - latlng.lng) < 0.0001
+        );
+        if (point) {
+          item = point;
+          itemType = "ponto";
+        } else {
+          // Verificar eventos
+          const event = events.find(
+            (e) =>
+              e.lat &&
+              e.lng &&
+              Math.abs(e.lat - latlng.lat) < 0.0001 &&
+              Math.abs(e.lng - latlng.lng) < 0.0001
+          );
+          if (event) {
+            item = event;
+            itemType = "evento";
+          } else {
+            // Verificar estabelecimentos
+            const establishment = establishments.find(
+              (e) =>
+                e.lat &&
+                e.lng &&
+                Math.abs(e.lat - latlng.lat) < 0.0001 &&
+                Math.abs(e.lng - latlng.lng) < 0.0001
+            );
+            if (establishment) {
+              item = establishment;
+              itemType = "estabelecimento";
+            }
+          }
+        }
+
+        // Se encontrou o item, atualizar o popup
+        if (item && itemType) {
+          let newContent;
+          if (itemType === "ponto") {
+            newContent = createPointPopup(item);
+          } else if (itemType === "evento") {
+            newContent = createEventPopup(item);
+          } else if (itemType === "estabelecimento") {
+            newContent = createEstablishmentPopup(item);
+          }
+
+          if (newContent) {
+            marker.setPopupContent(newContent);
+          }
+        }
+      }
+    }
+  });
+}
+
+// Atualizar popups de todos os marcadores (mesmo fechados) para que quando abrirem tenham dados atualizados
+function updateMapPopups() {
+  if (!map) return;
+
+  markers.forEach((marker) => {
+    const latlng = marker.getLatLng();
+
+    // Encontrar o item correspondente ao marcador
+    let item = null;
+    let itemType = null;
+
+    // Verificar pontos turísticos
+    const point = points.find(
+      (p) =>
+        p.lat &&
+        p.lng &&
+        Math.abs(p.lat - latlng.lat) < 0.0001 &&
+        Math.abs(p.lng - latlng.lng) < 0.0001
+    );
+    if (point) {
+      item = point;
+      itemType = "ponto";
+    } else {
+      // Verificar eventos
+      const event = events.find(
+        (e) =>
+          e.lat &&
+          e.lng &&
+          Math.abs(e.lat - latlng.lat) < 0.0001 &&
+          Math.abs(e.lng - latlng.lng) < 0.0001
+      );
+      if (event) {
+        item = event;
+        itemType = "evento";
+      } else {
+        // Verificar estabelecimentos
+        const establishment = establishments.find(
+          (e) =>
+            e.lat &&
+            e.lng &&
+            Math.abs(e.lat - latlng.lat) < 0.0001 &&
+            Math.abs(e.lng - latlng.lng) < 0.0001
+        );
+        if (establishment) {
+          item = establishment;
+          itemType = "estabelecimento";
+        }
+      }
+    }
+
+    // Se encontrou o item, atualizar o popup
+    if (item && itemType) {
+      let newContent;
+      if (itemType === "ponto") {
+        newContent = createPointPopup(item);
+      } else if (itemType === "evento") {
+        newContent = createEventPopup(item);
+      } else if (itemType === "estabelecimento") {
+        newContent = createEstablishmentPopup(item);
+      }
+
+      if (newContent) {
+        // Se o popup já existe, atualizar o conteúdo
+        // Se não existe, criar um novo (será usado quando o marcador for clicado)
+        if (marker.getPopup()) {
+          marker.setPopupContent(newContent);
+        } else {
+          // Criar popup para uso futuro
+          marker.bindPopup(newContent, { maxWidth: 300 });
+        }
+      }
+    }
+  });
 }
 
 // ========== LISTA DE ITENS ==========
@@ -3030,7 +3273,7 @@ function updateItemsList() {
                 🏢 ${establishment.name}
                 ${
                   isVerified
-                    ? '<span class="verified-badge" title="Verificado pelo Cadastur">✓ Verificado</span>'
+                    ? '<span class="verified-badge" title="Verificado pelo Cadastur">Verificado</span>'
                     : ""
                 }
             </h4>
@@ -3591,6 +3834,8 @@ async function deleteEstablishment(establishmentId) {
 
 // ========== MENSAGEM DE BOAS-VINDAS ==========
 let welcomeShown = false;
+let welcomeTimeoutId = null;
+let surveyTimeoutId = null;
 
 // Mostrar modal de boas-vindas
 function showWelcomeModal() {
@@ -3602,10 +3847,22 @@ function showWelcomeModal() {
 
   // Verificar se já viu (usando localStorage)
   const hasSeenWelcome = localStorage.getItem("welcome-seen");
-  if (hasSeenWelcome) return;
+  if (hasSeenWelcome) {
+    welcomeShown = true;
+    return;
+  }
+
+  // Verificar se o modal já está visível
+  const welcomeModal = document.getElementById("welcome-modal");
+  if (welcomeModal && welcomeModal.style.display === "block") {
+    welcomeShown = true;
+    return;
+  }
 
   welcomeShown = true;
-  document.getElementById("welcome-modal").style.display = "block";
+  if (welcomeModal) {
+    welcomeModal.style.display = "block";
+  }
 }
 
 // Fechar modal de boas-vindas
@@ -3629,10 +3886,22 @@ function showSurveyModal() {
 
   // Verificar se já respondeu (usando localStorage)
   const hasResponded = localStorage.getItem("survey-responded");
-  if (hasResponded) return;
+  if (hasResponded) {
+    surveyShown = true;
+    return;
+  }
+
+  // Verificar se o modal já está visível
+  const surveyModal = document.getElementById("survey-modal");
+  if (surveyModal && surveyModal.style.display === "block") {
+    surveyShown = true;
+    return;
+  }
 
   surveyShown = true;
-  document.getElementById("survey-modal").style.display = "block";
+  if (surveyModal) {
+    surveyModal.style.display = "block";
+  }
 }
 
 // Fechar modal de pesquisa
@@ -4077,7 +4346,14 @@ function toggleSidebar() {
     overlay.id = "sidebar-overlay";
     overlay.className = "sidebar-overlay";
     overlay.onclick = toggleSidebar; // Fechar ao clicar no overlay
-    document.querySelector(".app-main").appendChild(overlay);
+    // Adicionar ao app-container para cobrir toda a tela
+    const appContainer = document.getElementById("app-container");
+    if (appContainer) {
+      appContainer.appendChild(overlay);
+    } else {
+      // Fallback para body se app-container não existir
+      document.body.appendChild(overlay);
+    }
   }
 
   if (sidebar) {
@@ -4095,14 +4371,21 @@ function toggleSidebar() {
 function checkSidebarToggle() {
   const toggle = document.getElementById("sidebar-toggle");
   const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+
   if (window.innerWidth <= 768) {
     if (toggle) toggle.style.display = "flex";
-    if (sidebar) sidebar.style.position = "absolute";
+    // Não manipular position inline - deixar o CSS gerenciar
+    // O CSS já define position: fixed para mobile
   } else {
     if (toggle) toggle.style.display = "none";
     if (sidebar) {
-      sidebar.style.position = "relative";
+      // Remover classe active e deixar CSS gerenciar position
       sidebar.classList.remove("active");
+    }
+    // Esconder overlay em desktop
+    if (overlay) {
+      overlay.classList.remove("active");
     }
   }
 }

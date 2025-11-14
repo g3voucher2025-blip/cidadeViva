@@ -19,6 +19,7 @@
   <body>
     <div class="container" id="login-container">
       <div class="login-card">
+        <button class="login-close-btn" onclick="closeLoginForm()" title="Fechar e continuar como visitante">×</button>
         <div class="logo">
           <div class="logo-icon">
             <svg
@@ -107,6 +108,7 @@
     <!-- Tela de Cadastro -->
     <div class="container" id="register-container" style="display: none">
       <div class="login-card">
+        <button class="login-close-btn" onclick="closeLoginForm()" title="Fechar e continuar como visitante">×</button>
         <div class="logo">
           <div class="logo-icon">
             <svg
@@ -702,7 +704,7 @@
           <div class="form-group">
             <label for="establishment-website">Website</label>
             <input
-              type="url"
+              type="text"
               id="establishment-website"
               placeholder="https://www.exemplo.com"
             />
