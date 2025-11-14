@@ -719,11 +719,8 @@
           <!-- Campo Cadastur -->
           <div class="form-group">
             <label>Possui cadastro no Cadastur?</label>
-            <div style="margin-top: 10px">
-              <label
-                class="checkbox-label"
-                style="display: block; margin-bottom: 10px"
-              >
+            <div class="filter-type-group" style="margin-top: 10px">
+              <label class="radio-label">
                 <input
                   type="radio"
                   name="has-cadastur"
@@ -731,9 +728,9 @@
                   value="yes"
                   onchange="toggleCadasturFields(true)"
                 />
-                Sim, já possuo cadastro
+                <span>Sim, já possuo cadastro</span>
               </label>
-              <label class="checkbox-label" style="display: block">
+              <label class="radio-label">
                 <input
                   type="radio"
                   name="has-cadastur"
@@ -742,7 +739,7 @@
                   checked
                   onchange="toggleCadasturFields(false)"
                 />
-                Não, ainda não possuo
+                <span>Não, ainda não possuo</span>
               </label>
             </div>
             <div id="cadastur-fields" style="display: none; margin-top: 15px">
@@ -879,24 +876,18 @@
         <form id="survey-form">
           <div class="form-group">
             <label>Já visitou a cidade ou pensa em visitar?</label>
-            <div style="margin-top: 10px">
-              <label
-                class="checkbox-label"
-                style="display: block; margin-bottom: 10px"
-              >
+            <div class="filter-type-group" style="margin-top: 10px">
+              <label class="radio-label">
                 <input type="radio" name="visit-status" value="ja-visitei" />
-                Já visitei
+                <span>Já visitei</span>
               </label>
-              <label
-                class="checkbox-label"
-                style="display: block; margin-bottom: 10px"
-              >
+              <label class="radio-label">
                 <input type="radio" name="visit-status" value="penso-visitar" />
-                Penso em visitar
+                <span>Penso em visitar</span>
               </label>
-              <label class="checkbox-label" style="display: block">
+              <label class="radio-label">
                 <input type="radio" name="visit-status" value="nao-sei" />
-                Não sei ainda
+                <span>Não sei ainda</span>
               </label>
             </div>
           </div>
