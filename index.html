@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cidade Viva - Turismo Connect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+  </head>
+  <body>
+    <div class="container" id="login-container">
+      <div class="login-card">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg
+              width="80"
+              height="80"
+              viewBox="0 0 80 80"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="40" cy="40" r="35" fill="#2ECC71" opacity="0.2" />
+              <path
+                d="M40 15L45 30L60 35L45 40L40 55L35 40L20 35L35 30L40 15Z"
+                fill="#2ECC71"
+              />
+              <circle cx="40" cy="40" r="8" fill="#FFFFFF" />
+              <path
+                d="M25 25L30 30M50 30L55 25M25 55L30 50M50 50L55 55"
+                stroke="#3498DB"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <h1>Cidade Viva</h1>
+          <p>Conecte-se ao turismo local</p>
+        </div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              placeholder="seu@email.com"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Senha</label>
+            <input
+              type="password"
+              id="password"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="role">Tipo de Usuário</label>
+            <select id="role" required>
+              <option value="">Selecione...</option>
+              <option value="admin">👑 Administrador</option>
+              <option value="empresa">🏢 Empresa</option>
+              <option value="turista">🧳 Turista</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Entrar</button>
+        </form>
+
+        <div class="login-footer">
+          <p>
+            Não tem uma conta?
+            <a href="#" onclick="showRegisterForm(); return false;"
+              >Cadastre-se aqui</a
+            >
+          </p>
+        </div>
+
+        <div class="demo-accounts">
+          <p class="demo-title">💡 Contas de Demonstração:</p>
+          <div class="demo-buttons">
+            <button class="demo-btn" onclick="fillDemo('admin')">Admin</button>
+            <button class="demo-btn" onclick="fillDemo('empresa')">
+              Empresa
+            </button>
+            <button class="demo-btn" onclick="fillDemo('turista')">
+              Turista
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tela de Cadastro -->
+    <div class="container" id="register-container" style="display: none">
+      <div class="login-card">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg
+              width="80"
+              height="80"
+              viewBox="0 0 80 80"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="40" cy="40" r="35" fill="#2ECC71" opacity="0.2" />
+              <path
+                d="M40 15L45 30L60 35L45 40L40 55L35 40L20 35L35 30L40 15Z"
+                fill="#2ECC71"
+              />
+              <circle cx="40" cy="40" r="8" fill="#FFFFFF" />
+              <path
+                d="M25 25L30 30M50 30L55 25M25 55L30 50M50 50L55 55"
+                stroke="#3498DB"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <h1>Cidade Viva</h1>
+          <p>Criar nova conta</p>
+        </div>
+
+        <form id="register-form">
+          <div class="form-group">
+            <label for="register-email">Email</label>
+            <input
+              type="email"
+              id="register-email"
+              placeholder="seu@email.com"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="register-password">Senha</label>
+            <input
+              type="password"
+              id="register-password"
+              placeholder="Mínimo 6 caracteres"
+              minlength="6"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="register-password-confirm">Confirmar Senha</label>
+            <input
+              type="password"
+              id="register-password-confirm"
+              placeholder="Digite a senha novamente"
+              minlength="6"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="register-role">Tipo de Usuário</label>
+            <select id="register-role" required>
+              <option value="">Selecione...</option>
+              <option value="empresa">🏢 Empresa</option>
+              <option value="turista">🧳 Turista</option>
+            </select>
+            <small
+              style="
+                color: #7f8c8d;
+                font-size: 0.85em;
+                display: block;
+                margin-top: 5px;
+              "
+            >
+              ⚠️ Administradores devem ser criados pelo Firebase Console
+            </small>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Criar Conta</button>
+        </form>
+
+        <div class="login-footer">
+          <p>
+            Já tem uma conta?
+            <a href="#" onclick="showLoginForm(); return false;"
+              >Faça login aqui</a
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Container de Notificações -->
+    <div id="notifications-container"></div>
+
+    <div class="app-container" id="app-container" style="display: none">
+      <header class="app-header">
+        <div class="header-content">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 80 80"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="40" cy="40" r="35" fill="#2ECC71" opacity="0.2" />
+              <path
+                d="M40 15L45 30L60 35L45 40L40 55L35 40L20 35L35 30L40 15Z"
+                fill="#2ECC71"
+              />
+              <circle cx="40" cy="40" r="8" fill="#FFFFFF" />
+            </svg>
+            <h1>Cidade Viva</h1>
+          </div>
+          <div class="user-info">
+            <span class="user-role" id="user-role-badge"></span>
+            <span class="user-email" id="user-email"></span>
+            <button
+              class="btn btn-secondary"
+              id="visitor-login-btn"
+              onclick="showLoginForm()"
+              style="display: none"
+            >
+              Entrar
+            </button>
+            <button class="btn btn-secondary btn-logout" onclick="logout()">
+              Sair
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="app-main">
+        <button
+          class="sidebar-toggle"
+          id="sidebar-toggle"
+          onclick="toggleSidebar()"
+          style="display: none"
+        >
+          ☰
+        </button>
+        <aside class="sidebar" id="sidebar">
+          <div class="sidebar-content">
+            <div id="admin-panel" class="role-panel" style="display: none">
+              <h2>👑 Painel Admin</h2>
+              <button class="btn btn-primary" onclick="showAddPointForm()">
+                + Cadastrar Ponto Turístico
+              </button>
+              <button
+                class="btn btn-primary"
+                onclick="showAddEventForm()"
+                style="margin-top: 10px"
+              >
+                + Cadastrar Evento
+              </button>
+              <button
+                class="btn btn-primary"
+                onclick="showDashboard()"
+                style="margin-top: 10px"
+              >
+                📊 Dashboard
+              </button>
+              <button
+                class="btn btn-secondary"
+                onclick="loadAndRunPopulateScript()"
+                style="margin-top: 10px"
+                title="Popular banco de dados com dados fictícios"
+              >
+                🗄️ Popular Banco de Dados
+              </button>
+            </div>
+
+            <div id="empresa-panel" class="role-panel" style="display: none">
+              <h2>🏢 Painel Empresa</h2>
+              <button class="btn btn-primary" onclick="showAddEventForm()">
+                + Cadastrar Evento
+              </button>
+              <button
+                class="btn btn-primary"
+                onclick="showAddEstablishmentForm()"
+                style="margin-top: 10px"
+              >
+                + Cadastrar Estabelecimento
+              </button>
+            </div>
+
+            <div id="turista-panel" class="role-panel" style="display: none">
+              <h2>🧳 Painel Turista</h2>
+            </div>
+
+            <!-- Barra de Pesquisa e Filtros (visível para todos) -->
+            <div class="search-filters-section">
+              <div class="search-box">
+                <input
+                  type="text"
+                  id="search-input"
+                  placeholder="🔍 Pesquisar eventos ou locais..."
+                  oninput="handleSearch()"
+                />
+              </div>
+
+              <div class="filter-section">
+                <h3>Filtrar por Tipo</h3>
+                <div class="filter-type-group">
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="filter-type"
+                      value="all"
+                      checked
+                      onchange="handleFilterChange()"
+                    />
+                    <span>Todos</span>
+                  </label>
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="filter-type"
+                      value="pontos"
+                      onchange="handleFilterChange()"
+                    />
+                    <span>📍 Pontos Turísticos</span>
+                  </label>
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="filter-type"
+                      value="eventos"
+                      onchange="handleFilterChange()"
+                    />
+                    <span>🎉 Eventos</span>
+                  </label>
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="filter-type"
+                      value="estabelecimentos"
+                      onchange="handleFilterChange()"
+                    />
+                    <span>🏢 Estabelecimentos</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Filtro de Categoria de Estabelecimento -->
+              <div
+                class="filter-section"
+                id="category-filter-section"
+                style="display: none"
+              >
+                <h3>Filtrar por Categoria</h3>
+                <select
+                  id="filter-category"
+                  class="filter-select"
+                  onchange="handleFilterChange()"
+                >
+                  <option value="all">Todas as categorias</option>
+                  <option value="restaurante">🍽️ Restaurante</option>
+                  <option value="hotel">🏨 Hotel</option>
+                  <option value="loja">🛍️ Loja</option>
+                  <option value="atracao">🎯 Atração</option>
+                  <option value="servico">🔧 Serviço</option>
+                  <option value="outro">📦 Outro</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="items-list" id="items-list">
+              <h3>Itens no Mapa</h3>
+              <div id="items-container"></div>
+            </div>
+          </div>
+        </aside>
+
+        <div class="map-container">
+          <div id="map"></div>
+          <div id="map-loading" class="loading-overlay" style="display: none">
+            <div class="loading-spinner"></div>
+            <p>Carregando mapa...</p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modal para Cadastrar Ponto Turístico -->
+    <div id="point-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('point-modal')">&times;</span>
+        <h2 id="point-modal-title">Cadastrar Ponto Turístico</h2>
+        <form id="point-form">
+          <input type="hidden" id="point-id" />
+          <div class="form-group">
+            <label for="point-name">Nome</label>
+            <input type="text" id="point-name" required />
+          </div>
+          <div class="form-group">
+            <label for="point-description">Descrição</label>
+            <textarea id="point-description" rows="3" required></textarea>
+          </div>
+
+          <!-- Localização por Endereço -->
+          <div class="form-group">
+            <label>Localização</label>
+            <div class="location-input-group">
+              <div class="form-row">
+                <div class="form-col">
+                  <label for="point-cep">CEP</label>
+                  <input
+                    type="text"
+                    id="point-cep"
+                    placeholder="00000-000"
+                    maxlength="9"
+                    oninput="formatCEP(this)"
+                    onblur="searchCEP('point-cep', 'point-address')"
+                  />
+                </div>
+                <div class="form-col">
+                  <label for="point-address">Endereço Completo</label>
+                  <input
+                    type="text"
+                    id="point-address"
+                    placeholder="Rua, número, bairro, cidade - UF"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="geocodeAddress('point-address', 'point-cep', 'point-lat', 'point-lng')"
+                style="width: auto; margin-top: 10px"
+              >
+                🔍 Buscar Coordenadas
+              </button>
+            </div>
+          </div>
+
+          <!-- Coordenadas (preenchidas automaticamente ou manualmente) -->
+          <div class="form-group">
+            <label>Coordenadas (preenchidas automaticamente)</label>
+            <div class="form-row">
+              <div class="form-col">
+                <label for="point-lat">Latitude</label>
+                <input type="number" id="point-lat" step="any" />
+              </div>
+              <div class="form-col">
+                <label for="point-lng">Longitude</label>
+                <input type="number" id="point-lng" step="any" />
+              </div>
+            </div>
+            <small style="color: #7f8c8d; font-size: 0.85em"
+              >Preencha o endereço acima e clique em "Buscar Coordenadas", ou
+              insira manualmente. Você também pode clicar no mapa para pegar
+              coordenadas.</small
+            >
+          </div>
+          <div class="form-group">
+            <label for="point-category">Categoria</label>
+            <select id="point-category" required>
+              <option value="monumento">Monumento</option>
+              <option value="praia">Praia</option>
+              <option value="museu">Museu</option>
+              <option value="parque">Parque</option>
+              <option value="igreja">Igreja</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="point-images-input">Imagens</label>
+            <input
+              type="file"
+              id="point-images-input"
+              accept="image/*"
+              multiple
+              onchange="handleImagePreview('point-images-input', 'point-images-preview')"
+            />
+            <small style="color: #7f8c8d; font-size: 0.85em"
+              >Selecione uma ou mais imagens (máximo 32MB cada)</small
+            >
+            <div id="point-images-preview" class="images-preview"></div>
+            <div
+              id="point-existing-images"
+              class="existing-images-preview"
+            ></div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="point-submit-btn">
+            Cadastrar
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal para Cadastrar Evento -->
+    <div id="event-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('event-modal')">&times;</span>
+        <h2 id="event-modal-title">Cadastrar Evento</h2>
+        <form id="event-form">
+          <input type="hidden" id="event-id" />
+          <div class="form-group">
+            <label for="event-name">Nome do Evento</label>
+            <input type="text" id="event-name" required />
+          </div>
+          <div class="form-group">
+            <label for="event-description">Descrição</label>
+            <textarea id="event-description" rows="3" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="event-date">Data</label>
+            <input type="date" id="event-date" required />
+          </div>
+          <div class="form-group">
+            <label for="event-time">Horário</label>
+            <input type="time" id="event-time" required />
+          </div>
+          <!-- Localização por Endereço -->
+          <div class="form-group">
+            <label>Localização</label>
+            <div class="location-input-group">
+              <div class="form-row">
+                <div class="form-col">
+                  <label for="event-cep">CEP</label>
+                  <input
+                    type="text"
+                    id="event-cep"
+                    placeholder="00000-000"
+                    maxlength="9"
+                    oninput="formatCEP(this)"
+                    onblur="searchCEP('event-cep', 'event-address')"
+                  />
+                </div>
+                <div class="form-col">
+                  <label for="event-address">Endereço Completo</label>
+                  <input
+                    type="text"
+                    id="event-address"
+                    placeholder="Rua, número, bairro, cidade - UF"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="geocodeAddress('event-address', 'event-cep', 'event-lat', 'event-lng')"
+                style="width: auto; margin-top: 10px"
+              >
+                🔍 Buscar Coordenadas
+              </button>
+            </div>
+          </div>
+
+          <!-- Coordenadas (preenchidas automaticamente ou manualmente) -->
+          <div class="form-group">
+            <label>Coordenadas (preenchidas automaticamente)</label>
+            <div class="form-row">
+              <div class="form-col">
+                <label for="event-lat">Latitude</label>
+                <input type="number" id="event-lat" step="any" />
+              </div>
+              <div class="form-col">
+                <label for="event-lng">Longitude</label>
+                <input type="number" id="event-lng" step="any" />
+              </div>
+            </div>
+            <small style="color: #7f8c8d; font-size: 0.85em"
+              >Preencha o endereço acima e clique em "Buscar Coordenadas", ou
+              insira manualmente. Você também pode clicar no mapa para pegar
+              coordenadas.</small
+            >
+          </div>
+          <div class="form-group">
+            <label for="event-images-input">Imagens</label>
+            <input
+              type="file"
+              id="event-images-input"
+              accept="image/*"
+              multiple
+              onchange="handleImagePreview('event-images-input', 'event-images-preview')"
+            />
+            <small style="color: #7f8c8d; font-size: 0.85em"
+              >Selecione uma ou mais imagens (máximo 32MB cada)</small
+            >
+            <div id="event-images-preview" class="images-preview"></div>
+            <div
+              id="event-existing-images"
+              class="existing-images-preview"
+            ></div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="event-submit-btn">
+            Cadastrar
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal para Cadastrar Estabelecimento -->
+    <div id="establishment-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('establishment-modal')"
+          >&times;</span
+        >
+        <h2 id="establishment-modal-title">
+          Cadastrar Estabelecimento Comercial
+        </h2>
+        <form id="establishment-form">
+          <input type="hidden" id="establishment-id" />
+          <div class="form-group">
+            <label for="establishment-name">Nome do Estabelecimento</label>
+            <input type="text" id="establishment-name" required />
+          </div>
+          <div class="form-group">
+            <label for="establishment-description">Descrição</label>
+            <textarea
+              id="establishment-description"
+              rows="3"
+              required
+            ></textarea>
+          </div>
+
+          <!-- Localização por Endereço -->
+          <div class="form-group">
+            <label>Localização</label>
+            <div class="location-input-group">
+              <div class="form-row">
+                <div class="form-col">
+                  <label for="establishment-cep">CEP</label>
+                  <input
+                    type="text"
+                    id="establishment-cep"
+                    placeholder="00000-000"
+                    maxlength="9"
+                    oninput="formatCEP(this)"
+                    onblur="searchCEP('establishment-cep', 'establishment-address')"
+                  />
+                </div>
+                <div class="form-col">
+                  <label for="establishment-address">Endereço Completo</label>
+                  <input
+                    type="text"
+                    id="establishment-address"
+                    placeholder="Rua, número, bairro, cidade - UF"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="geocodeAddress('establishment-address', 'establishment-cep', 'establishment-lat', 'establishment-lng')"
+              >
+                🔍 Buscar Coordenadas
+              </button>
+              <div class="form-row">
+                <div class="form-col">
+                  <label for="establishment-lat">Latitude</label>
+                  <input type="number" id="establishment-lat" step="any" />
+                </div>
+                <div class="form-col">
+                  <label for="establishment-lng">Longitude</label>
+                  <input type="number" id="establishment-lng" step="any" />
+                </div>
+              </div>
+              <small style="color: #7f8c8d; font-size: 0.85em"
+                >Preencha o endereço acima e clique em "Buscar Coordenadas", ou
+                insira manualmente. Você também pode clicar no mapa para pegar
+                coordenadas.</small
+              >
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="establishment-category">Categoria</label>
+            <select id="establishment-category" required>
+              <option value="restaurante">Restaurante</option>
+              <option value="hotel">Hotel</option>
+              <option value="loja">Loja</option>
+              <option value="atracao">Atração</option>
+              <option value="servico">Serviço</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="establishment-phone">Telefone</label>
+            <input
+              type="tel"
+              id="establishment-phone"
+              placeholder="(67) 99999-9999"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="establishment-email">E-mail</label>
+            <input
+              type="email"
+              id="establishment-email"
+              placeholder="contato@estabelecimento.com"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="establishment-website">Website</label>
+            <input
+              type="url"
+              id="establishment-website"
+              placeholder="https://www.exemplo.com"
+            />
+          </div>
+
+          <!-- Campo Cadastur -->
+          <div class="form-group">
+            <label>Possui cadastro no Cadastur?</label>
+            <div style="margin-top: 10px">
+              <label
+                class="checkbox-label"
+                style="display: block; margin-bottom: 10px"
+              >
+                <input
+                  type="radio"
+                  name="has-cadastur"
+                  id="has-cadastur-yes"
+                  value="yes"
+                  onchange="toggleCadasturFields(true)"
+                />
+                Sim, já possuo cadastro
+              </label>
+              <label class="checkbox-label" style="display: block">
+                <input
+                  type="radio"
+                  name="has-cadastur"
+                  id="has-cadastur-no"
+                  value="no"
+                  checked
+                  onchange="toggleCadasturFields(false)"
+                />
+                Não, ainda não possuo
+              </label>
+            </div>
+            <div id="cadastur-fields" style="display: none; margin-top: 15px">
+              <label for="establishment-cadastur-number"
+                >Número do Cadastur</label
+              >
+              <input
+                type="text"
+                id="establishment-cadastur-number"
+                placeholder="Digite o número do seu cadastro"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="establishment-images-input">Imagens</label>
+            <input
+              type="file"
+              id="establishment-images-input"
+              accept="image/*"
+              multiple
+              onchange="handleImagePreview('establishment-images-input', 'establishment-images-preview')"
+            />
+            <small style="color: #7f8c8d; font-size: 0.85em"
+              >Selecione uma ou mais imagens (máximo 32MB cada)</small
+            >
+            <div id="establishment-images-preview" class="images-preview"></div>
+            <div
+              id="establishment-existing-images"
+              class="existing-images-preview"
+            ></div>
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            id="establishment-submit-btn"
+          >
+            Cadastrar
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal para Convite Cadastur -->
+    <div id="cadastur-invite-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('cadastur-invite-modal')"
+          >&times;</span
+        >
+        <h2>✨ Benefícios do Cadastur</h2>
+        <div style="text-align: left; padding: 20px 0">
+          <h3>Por que se cadastrar no Cadastur?</h3>
+          <ul style="line-height: 2">
+            <li>
+              ✅ <strong>Selo de Verificado:</strong> Seu estabelecimento
+              aparecerá com selo de verificado no mapa
+            </li>
+            <li>
+              ✅ <strong>Maior Visibilidade:</strong> Estabelecimentos
+              verificados aparecem primeiro nos resultados
+            </li>
+            <li>
+              ✅ <strong>Credibilidade:</strong> Aumenta a confiança dos
+              turistas no seu negócio
+            </li>
+            <li>
+              ✅ <strong>Prioridade:</strong> Destaque especial no mapa e nas
+              buscas
+            </li>
+            <li>
+              ✅ <strong>Suporte Oficial:</strong> Acesso a benefícios e
+              programas de turismo
+            </li>
+          </ul>
+          <p
+            style="
+              margin-top: 20px;
+              font-weight: 600;
+              color: var(--primary-color);
+            "
+          >
+            💡 O cadastro no Cadastur é gratuito e pode ser feito através do
+            site oficial do Ministério do Turismo.
+          </p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px">
+          <button class="btn btn-primary" onclick="proceedWithCadastur()">
+            Quero me cadastrar
+          </button>
+          <button class="btn btn-secondary" onclick="proceedWithoutCadastur()">
+            Continuar sem cadastro
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para Avaliação -->
+    <div id="review-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('review-modal')">&times;</span>
+        <h2>Avaliar</h2>
+        <form id="review-form">
+          <input type="hidden" id="review-item-id" />
+          <input type="hidden" id="review-item-type" />
+          <div class="form-group">
+            <label for="review-rating">Nota (1-5)</label>
+            <input type="number" id="review-rating" min="1" max="5" required />
+          </div>
+          <div class="form-group">
+            <label for="review-comment">Comentário</label>
+            <textarea id="review-comment" rows="4" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            Enviar Avaliação
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Firebase SDK (deve vir ANTES do app.js) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Modal de Pesquisa -->
+    <div id="survey-modal" class="modal">
+      <div class="modal-content" style="max-width: 600px">
+        <span class="close" onclick="closeSurveyModal()">&times;</span>
+        <h2>📋 Pesquisa de Turismo</h2>
+        <p style="margin-bottom: 20px; color: #7f8c8d">
+          Ajude-nos a melhorar! Sua opinião é muito importante para nós.
+        </p>
+        <form id="survey-form">
+          <div class="form-group">
+            <label>Já visitou a cidade ou pensa em visitar?</label>
+            <div style="margin-top: 10px">
+              <label
+                class="checkbox-label"
+                style="display: block; margin-bottom: 10px"
+              >
+                <input type="radio" name="visit-status" value="ja-visitei" />
+                Já visitei
+              </label>
+              <label
+                class="checkbox-label"
+                style="display: block; margin-bottom: 10px"
+              >
+                <input type="radio" name="visit-status" value="penso-visitar" />
+                Penso em visitar
+              </label>
+              <label class="checkbox-label" style="display: block">
+                <input type="radio" name="visit-status" value="nao-sei" />
+                Não sei ainda
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="survey-reason">Motivo da visita (opcional)</label>
+            <textarea
+              id="survey-reason"
+              rows="3"
+              placeholder="Ex: Turismo, negócios, visitar familiares..."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="survey-origin">De onde você veio? (opcional)</label>
+            <input
+              type="text"
+              id="survey-origin"
+              placeholder="Ex: São Paulo - SP, Campo Grande - MS..."
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="survey-companions">Acompanhantes (opcional)</label>
+            <select id="survey-companions">
+              <option value="">Selecione...</option>
+              <option value="sozinho">Sozinho(a)</option>
+              <option value="familia">Família</option>
+              <option value="amigos">Amigos</option>
+              <option value="casal">Casal</option>
+              <option value="grupo">Grupo</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="survey-stay">Tempo de estadia (opcional)</label>
+            <select id="survey-stay">
+              <option value="">Selecione...</option>
+              <option value="1-dia">1 dia</option>
+              <option value="2-3-dias">2-3 dias</option>
+              <option value="4-7-dias">4-7 dias</option>
+              <option value="1-2-semanas">1-2 semanas</option>
+              <option value="mais-2-semanas">Mais de 2 semanas</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 20px">
+            <button type="submit" class="btn btn-primary">
+              Enviar Respostas
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeSurveyModal()"
+            >
+              Pular
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de Boas-Vindas -->
+    <div id="welcome-modal" class="modal">
+      <div class="modal-content" style="max-width: 600px; text-align: center">
+        <div style="padding: 20px">
+          <h2
+            style="
+              background: linear-gradient(135deg, #2ecc71, #3498db);
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+              background-clip: text;
+              margin-bottom: 20px;
+            "
+          >
+            🌟 Bem-vindo ao Cidade Viva! 🌟
+          </h2>
+          <div
+            style="
+              font-size: 1.1em;
+              line-height: 1.8;
+              color: var(--dark-color);
+              margin-bottom: 30px;
+            "
+          >
+            <p style="margin-bottom: 15px">
+              <strong>Descubra os melhores destinos turísticos!</strong>
+            </p>
+            <p style="margin-bottom: 15px">
+              🗺️ Explore pontos turísticos incríveis no mapa<br />
+              🎉 Confira eventos imperdíveis na região<br />
+              🏢 Conheça estabelecimentos comerciais verificados<br />
+              ⭐ Deixe suas avaliações e compartilhe experiências
+            </p>
+            <p style="color: #2ecc71; font-weight: 600; margin-top: 20px">
+              Sua próxima aventura começa aqui! 🚀
+            </p>
+          </div>
+          <button
+            class="btn btn-primary"
+            onclick="closeWelcomeModal()"
+            style="padding: 12px 40px; font-size: 1.1em"
+          >
+            Começar a Explorar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lightbox para Visualização de Imagens -->
+    <div
+      id="image-lightbox"
+      class="modal"
+      style="display: none"
+      onclick="closeImageLightbox(event)"
+    >
+      <div class="lightbox-content" onclick="event.stopPropagation()">
+        <span class="lightbox-close" onclick="closeImageLightbox()"
+          >&times;</span
+        >
+        <img id="lightbox-image" src="" alt="Imagem ampliada" />
+        <div class="lightbox-nav">
+          <button
+            class="lightbox-btn lightbox-prev"
+            onclick="changeLightboxImage(-1)"
+          >
+            ❮
+          </button>
+          <button
+            class="lightbox-btn lightbox-next"
+            onclick="changeLightboxImage(1)"
+          >
+            ❯
+          </button>
+        </div>
+        <div class="lightbox-info">
+          <span id="lightbox-counter"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Admin -->
+    <div id="dashboard-modal" class="modal">
+      <div
+        class="modal-content"
+        style="max-width: 1200px; max-height: 90vh; overflow-y: auto"
+      >
+        <span class="close" onclick="closeModal('dashboard-modal')"
+          >&times;</span
+        >
+        <h2>📊 Dashboard Administrativo</h2>
+        <div id="dashboard-content">
+          <div style="text-align: center; padding: 40px">
+            <p>Carregando estatísticas...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="app-firebase.js"></script>
+    <!-- Script para popular banco de dados (apenas para desenvolvimento) -->
+    <!-- <script src="populate-database.js"></script> -->
+  </body>
+</html>

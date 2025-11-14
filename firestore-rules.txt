@@ -1,0 +1,75 @@
+// ============================================
+// REGRAS DE SEGURANÇA DO FIRESTORE
+// ============================================
+// Cole estas regras no Firebase Console > Firestore Database > Regras
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function para verificar se usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function para obter o role do usuário
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Helper function para verificar se é admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserRole() == 'admin';
+    }
+    
+    // Coleção de usuários
+    // Usuários podem ler/escrever apenas seus próprios dados
+    // Admins podem ler todos os usuários
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Coleção de pontos turísticos
+    // Público pode ler, apenas admins podem escrever
+    match /points/{pointId} {
+      allow read: if true; // Público pode ler
+      allow create: if isAuthenticated() && isAdmin();
+      allow update, delete: if isAuthenticated() && isAdmin();
+    }
+    
+    // Coleção de eventos
+    // Público pode ler, empresas e admins podem escrever
+    match /events/{eventId} {
+      allow read: if true; // Público pode ler
+      allow create: if isAuthenticated() && (getUserRole() == 'empresa' || isAdmin());
+      allow update, delete: if isAuthenticated() && (getUserRole() == 'empresa' || isAdmin());
+    }
+    
+    // Coleção de avaliações
+    // Público pode ler, apenas turistas podem escrever
+    match /reviews/{reviewId} {
+      allow read: if true; // Público pode ler avaliações
+      allow create: if isAuthenticated() && getUserRole() == 'turista';
+      allow update, delete: if isAuthenticated() && getUserRole() == 'turista';
+    }
+    
+    // Coleção de estabelecimentos
+    // Público pode ler, empresas e admins podem escrever
+    match /establishments/{establishmentId} {
+      allow read: if true; // Público pode ler
+      allow create: if isAuthenticated() && (getUserRole() == 'empresa' || isAdmin());
+      allow update, delete: if isAuthenticated() && (getUserRole() == 'empresa' || isAdmin());
+    }
+    
+    // Coleção de pesquisas
+    // Todos podem criar (visitantes e usuários), apenas admins podem ler
+    match /surveys/{surveyId} {
+      allow create: if true; // Qualquer um pode responder pesquisa
+      allow read: if isAdmin(); // Apenas admins podem ler
+    }
+  }
+}
+

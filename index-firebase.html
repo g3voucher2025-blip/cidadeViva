@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Turismo Connect - Login</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+  </head>
+  <body>
+    <!-- ... resto do HTML igual ao index.html original ... -->
+    <!-- A única diferença é nos scripts no final: -->
+    
+    <!-- Scripts do Firebase (ADICIONAR ANTES DO app.js) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Configuração do Firebase -->
+    <script src="firebase-config.js"></script>
+    
+    <!-- Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- App principal (use app-firebase.js após configurar) -->
+    <script src="app-firebase.js"></script>
+    <!-- OU use app.js se ainda não configurou Firebase -->
+    <!-- <script src="app.js"></script> -->
+  </body>
+</html>
+

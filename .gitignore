@@ -1,0 +1,33 @@
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Arquivos temporários
+*.tmp
+*.log
+.cache/
+
+# Arquivos de configuração sensíveis
+# Descomente a linha abaixo se NÃO quiser versionar as credenciais do Firebase
+# firebase-config.js
+
